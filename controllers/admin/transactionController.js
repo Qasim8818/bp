@@ -85,3 +85,57 @@ exports.getAnalytics = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// Get pending transactions
+exports.getPendingTransactions = async (req, res) => {
+  try {
+    const { page = 1, limit = 10 } = req.query;
+    
+    const transactions = await Transaction.find({ status: 'pending' })
+      .populate('userId', 'name email')
+      .sort({ createdAt: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit);
+
+    const total = await Transaction.countDocuments({ status: 'pending' });
+
+    res.json({
+      success: true,
+      transactions,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        totalItems: total
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Process transaction
+exports.processTransaction = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { adminId } = req.user;
+    
+    const transaction = await Transaction.findById(id);
+    
+    if (!transaction) {
+      return res.status(404).json({ success: false, message: 'Transaction not found' });
+    }
+    
+    if (transaction.status !== 'pending') {
+      return res.status(400).json({ success: false, message: 'Transaction is not in pending status' });
+    }
+    
+    transaction.status = 'completed';
+    transaction.processedBy = adminId;
+    transaction.processedAt = new Date();
+    await transaction.save();
+    
+    res.json({ success: true, message: 'Transaction processed successfully', transaction });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

@@ -1,4 +1,4 @@
-const Withdrawal = require('../../models/Withdrawal');
+  const Withdrawal = require('../../models/Withdrawal');
 const User = require('../../models/User');
 const Transaction = require('../../models/Transaction');
 const withdrawalQueueService = require('../../services/withdrawalQueueService');
@@ -264,6 +264,47 @@ class WithdrawalManagementController {
           statusBreakdown
         }
       });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  async processWithdrawal(req, res) {
+    try {
+      const { id } = req.params;
+      const { adminId } = req.user;
+
+      const withdrawal = await Withdrawal.findById(id)
+        .populate('userId', 'username email balance');
+
+      if (!withdrawal) {
+        return res.status(404).json({ success: false, error: 'Withdrawal not found' });
+      }
+
+      if (withdrawal.status !== 'approved') {
+        return res.status(400).json({ success: false, error: 'Withdrawal must be approved before processing' });
+      }
+
+      // Update withdrawal status to completed
+      withdrawal.status = 'completed';
+      withdrawal.processedBy = adminId;
+      withdrawal.processedAt = new Date();
+      await withdrawal.save();
+
+      // Log the completion
+      await Transaction.create({
+        userId: withdrawal.userId,
+        type: 'withdrawal_completed',
+        amount: -withdrawal.amount,
+        status: 'completed',
+        description: 'Withdrawal processed and completed',
+        metadata: {
+          withdrawalId: withdrawal._id,
+          adminId
+        }
+      });
+
+      res.json({ success: true, message: 'Withdrawal processed successfully', withdrawal });
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });
     }
