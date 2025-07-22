@@ -6,22 +6,6 @@ exports.register = async (req, res) => {
   try {
     const { name, email, password, referralCode: usedReferralCode } = req.body;
 
-    // Validate required fields
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: 'Name, email, and password are required' });
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ message: 'Please provide a valid email address' });
-    }
-
-    // Validate password length
-    if (password.length < 6) {
-      return res.status(400).json({ message: 'Password must be at least 6 characters long' });
-    }
-
     // Check if email already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -65,28 +49,11 @@ exports.register = async (req, res) => {
       expiresIn: '7d'
     });
 
-    res.status(201).json({ 
-      token, 
-      user: { 
-        id: newUser._id,
-        name: newUser.name, 
-        email: newUser.email, 
-        role: newUser.role,
-        balance: newUser.balance,
-        referralCode: newUser.referralCode
-      } 
-    });
+    res.status(201).json({ token, user: { name: newUser.name, email: newUser.email, role: newUser.role } });
 
   } catch (error) {
     console.error('Register Error:', error);
-    if (error.name === 'ValidationError') {
-      const messages = Object.values(error.errors).map(err => err.message);
-      return res.status(400).json({ message: messages.join(', ') });
-    }
-    if (error.code === 11000) {
-      return res.status(400).json({ message: 'Email already exists' });
-    }
-    res.status(500).json({ message: 'Server error during registration' });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 

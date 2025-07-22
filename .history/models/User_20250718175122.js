@@ -4,19 +4,13 @@ const mongoose = require('mongoose');
 const { nanoid } = require('nanoid'); // ✅ Import nanoid for referralCode
 
 const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true
-  },
+  name: String,
   email: {
     type: String,
     required: true,
     unique: true
   },
-  password: {
-    type: String,
-    required: true
-  },
+  password: String,
   role: {
     type: String,
     enum: ['user', 'admin'],

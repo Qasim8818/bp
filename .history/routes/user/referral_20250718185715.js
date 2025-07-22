@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const referralController = require('../../controllers/user/referralController');
-const authMiddleware = require('../../middlewares/authMiddleware');
+const referralController = require('../controllers/user/referralController');
+const authMiddleware = require('../middlewares/authMiddleware');
 
 // Public routes
 router.get('/leaderboard', referralController.getReferralLeaderboard);
