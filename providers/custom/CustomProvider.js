@@ -2,6 +2,7 @@ const BaseProvider = require('../BaseProvider');
 const GameResult = require('../../models/GameResult');
 const User = require('../../models/User');
 const playerPoolService = require('../../services/playerPoolService');
+const prizePoolService = require('../../services/prizePoolService');
 const Jackpot = require('../../models/Jackpot');
 const { generateRandomNumber } = require('../../utils/rng');
 
